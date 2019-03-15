@@ -1,2 +1,4 @@
 build/
 .settings/language.settings.xml
+.settings/com.atollic.truestudio.debug.hardware_device.prefs
+template.elf.launch

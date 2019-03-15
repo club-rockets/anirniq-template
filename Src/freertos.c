@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
-
+#include "APP_heartBeat.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+osThreadId tsk_heartBeatID;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
@@ -91,7 +91,8 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  osThreadDef(heartBeat,tsk_heartBeat,osPriorityLow,1,100);
+  tsk_heartBeatID = osThreadCreate(osThread(heartBeat),0);
   /* USER CODE END RTOS_THREADS */
 
 }
