@@ -67,7 +67,9 @@ Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
 Src/stm32f4xx_it.c \
 Src/stm32f4xx_hal_msp.c \
-APP/APP_heartBeat.c
+APP/APP_heartBeat.c \
+Drivers/canDriver.c \
+BSP/BSP_CAN.c
 
 
 # ASM sources
@@ -129,11 +131,14 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+-IDrivers \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IAPP
+-IAPP \
+-IBSP
+
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
