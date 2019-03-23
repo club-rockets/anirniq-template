@@ -10,6 +10,7 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "string.h"
 
 canInstance_t can1Instance = {0};
 
@@ -37,6 +38,9 @@ uint32_t can_canInit(){
 	can1Instance.timeReSync = 1;
 
 	canInit(&can1Instance);
+	//init interruption for fan 1 fifo 0
+	can1Fifo0InitIt(&can1Instance);
+	can1Fifo0RegisterCallback(can_regUpdateCallback);
 
 	//init filters for boards
 
@@ -58,20 +62,71 @@ uint32_t can_canInit(){
 	filter.mask11.ID0 = BOARD_MOTHERBOARD_ID_SHIFTED;
 	filter.mask11.mask1 = BOARD_ID_MASK;
 	filter.mask11.ID1 = BOARD_MOTHERBOARD_ID_SHIFTED;
+
 	canSetFilter(&can1Instance,&filter,mask11Bit,2,0);
 
 	return 0;
 }
 
-uint32_t can_canSetRegister(uint32_t index,can_regData_u data){
-
-	can_registers[CAN_BOARD][index].data = data;
+//block if no mailbox is available
+uint32_t can_canSetRegister(uint32_t index,can_regData_u* data){
+	if(index >= CAN_REG_SIZE){
+		return 0;
+	}
+	can_registers[CAN_BOARD][index].data = *data;
 	can_registers[CAN_BOARD][index].lastTick = osKernelSysTick();
 
-	//todo init can with transmit interrupt
 	//send register
+	while(!canSendPacket(&can1Instance,(CAN_BOARD_ID<<1)&(index<<(1+BOARD_ID_SIZE)),0,CAN_REG_DATA_SIZE,data));
 
-	return 0;
+	return 1;
 }
 
 
+uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_reg_t* reg){
+
+
+	//since this is not an atomic operation,
+	//make sure that the data was not modified by an interrupt during reading
+	__disable_irq();
+	*reg = can_registers[board][index];
+	__enable_irq();
+return 1;
+}
+
+uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t)){
+
+	can_registers[CAN_BOARD][index].changeCallback = callback;
+	return 1;
+}
+
+
+
+void can_regUpdateCallback(void){
+	canRXpacket_t packet = {0};
+	uint32_t board,id;
+
+	can1SfFifo0Get(&packet);
+	board = ((packet.STID) & BOARD_ID_MASK) >> BOARD_ID_SHIFT;
+	id = ((packet.STID) & MESSAGE_ID_MASK) >> (BOARD_ID_SHIFT+BOARD_ID_SIZE);
+
+	//if board and id valid
+	if(board <= 4 && id < CAN_REG_SIZE){
+		//copy the data in the register
+		memcpy((void*)(&can_registers[board][id].data),(void*)(&packet.data),sizeof(can_regData_u));
+		//update the tick value
+		can_registers[board][id].lastTick = HAL_GetTick();
+		//call the register change callback if non-null
+		if(can_registers[board][id].changeCallback){
+			can_registers[board][id].changeCallback(id);
+		}
+	}
+}
+
+uint32_t can_canSetRegisterTest(uint32_t board, uint32_t index,can_regData_u* data){
+
+	//send register
+	canSendPacket(&can1Instance,(board<<1)|(index<<(1+BOARD_ID_SIZE)),0,CAN_REG_DATA_SIZE,data);
+
+	return 1;
+}

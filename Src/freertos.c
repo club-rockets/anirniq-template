@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
 #include "APP_heartBeat.h"
+#include "APP_CANTest.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,6 +48,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 osThreadId tsk_heartBeatID;
+osThreadId tsk_CANTestID;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
@@ -93,6 +95,9 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadDef(heartBeat,tsk_heartBeat,osPriorityLow,1,100);
   tsk_heartBeatID = osThreadCreate(osThread(heartBeat),0);
+
+  osThreadDef(CANTest,tsk_CANTest,osPriorityNormal,1,100);
+  tsk_CANTestID = osThreadCreate(osThread(CANTest),0);
   /* USER CODE END RTOS_THREADS */
 
 }

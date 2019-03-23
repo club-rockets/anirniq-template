@@ -22,7 +22,7 @@ TARGET = template
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -O0
 
 
 #######################################
@@ -68,6 +68,7 @@ Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
 Src/stm32f4xx_it.c \
 Src/stm32f4xx_hal_msp.c \
 APP/APP_heartBeat.c \
+APP/APP_CANTest.c \
 Drivers/canDriver.c \
 BSP/BSP_CAN.c
 

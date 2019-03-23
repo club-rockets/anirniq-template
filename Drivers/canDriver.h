@@ -5,8 +5,8 @@
 #include "stm32f407xx.h"
 
 //defines the software receive fifo size for fifo 0 anf fifo 1
-#define CAN_SF_FIFO0_SIZE 10
-#define CAN_SF_FIFO1_SIZE 10
+#define CAN_SF_FIFO0_SIZE 4
+#define CAN_SF_FIFO1_SIZE 0
 
 //error codes for rx sf fifo
 #define RX_SF_FIFO_OVERRUN (1<<0)

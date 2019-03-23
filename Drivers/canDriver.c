@@ -5,12 +5,21 @@
 #include "stm32f407xx.h"
 #include "stdio.h"
 
-
+#if CAN_SF_FIFO0_SIZE > 0
 static volatile struct {
-	canRXpacket_t rx[10];
+	canRXpacket_t rx[CAN_SF_FIFO0_SIZE];
 	uint32_t st,end;
 	uint32_t error;
-} can1SfRxFifo0 = {0} ,can1SfRxFifo1 = {0};
+} can1SfRxFifo0 = {0};
+#endif
+
+#if CAN_SF_FIFO1_SIZE > 0
+static volatile struct {
+	canRXpacket_t rx[CAN_SF_FIFO1_SIZE];
+	uint32_t st,end;
+	uint32_t error;
+} can1SfRxFifo1 = {0};
+#endif
 
 //callbacks pointers
 static void(*can1Fifo0Callback)(void) = 0;
@@ -125,6 +134,7 @@ void can1Fifo0RegisterCallback(void (*callback)(void)){
 	can1Fifo0Callback = callback;
 }
 
+#if CAN_SF_FIFO0_SIZE > 0
 //get message from sf fifo return positive when new message available
 uint32_t can1SfFifo0Get(canRXpacket_t *packet){
 	if(can1SfRxFifo0.st != can1SfRxFifo0.end){
@@ -137,6 +147,7 @@ uint32_t can1SfFifo0Get(canRXpacket_t *packet){
 	}
 	return 1;
 }
+#endif
 
 void can1Fifo1InitIt(canInstance_t * instance){
 		//Enable fifo 1 interrupt in NVIC
@@ -156,6 +167,8 @@ void can1Fifo1DeInitIt(canInstance_t * instance){
 void can1Fifo1RegisterCallback(void (*callback)(void)){
 	can1Fifo1Callback = callback;
 }
+
+#if CAN_SF_FIFO1_SIZE > 0
 //get message from sf fifo return positive when new message available
 uint32_t can1SfFifo1Get(canRXpacket_t *packet){
 	if(can1SfRxFifo1.st != can1SfRxFifo1.end){
@@ -168,6 +181,7 @@ uint32_t can1SfFifo1Get(canRXpacket_t *packet){
 	}
 	return 1;
 }
+#endif
 
 void can1WakeItInit(void){
 	//enable interrupt in NVIC
@@ -285,6 +299,7 @@ void canPrintRxPacket(canRXpacket_t *packet)
 //RX MAILBOX 0 IRQ HANDLER FOR CAN1
 void CAN1_RX0_IRQHandler(void){
 	if(CAN1->RF0R & CAN_RF0R_FMP0_Msk){
+#if CAN_SF_FIFO0_SIZE > 0
 		can1SfRxFifo0.end++;
 		can1SfRxFifo0.end %= CAN_SF_FIFO0_SIZE;
 		//check for overrun error
@@ -296,6 +311,7 @@ void CAN1_RX0_IRQHandler(void){
 		memcpy(&(can1SfRxFifo0.rx[can1SfRxFifo0.end]),&(CAN1->sFIFOMailBox[0]),sizeof(can1SfRxFifo0.rx[can1SfRxFifo0.end]));
 		//clear received frame from fifo
 		CAN1->RF0R |= CAN_RF0R_RFOM0;
+#endif
 	}
 	//call callback
 	if(can1Fifo0Callback){
@@ -306,6 +322,7 @@ void CAN1_RX0_IRQHandler(void){
 //RX MAILBOX 1 IRQ HANDLER FOR CAN1
 void CAN1_RX1_IRQHandler(void){
 	if(CAN1->RF1R & CAN_RF0R_FMP0_Msk){
+#if CAN_SF_FIFO1_SIZE > 0
 		can1SfRxFifo1.end++;
 		can1SfRxFifo1.end %= CAN_SF_FIFO1_SIZE;
 		//check for overrun error
@@ -317,6 +334,7 @@ void CAN1_RX1_IRQHandler(void){
 		memcpy(&(can1SfRxFifo1.rx[can1SfRxFifo1.end]),&(CAN1->sFIFOMailBox[1]),sizeof(can1SfRxFifo1.rx[can1SfRxFifo1.end]));
 		//clear received frame from fifo
 		CAN1->RF0R |= CAN_RF0R_RFOM0;
+#endif
 	}
 		if(can1Fifo1Callback){
 		can1Fifo1Callback();

@@ -18,6 +18,7 @@
 #define MESSAGE_ID_SIZE			6
 
 #define BOARD_ID_MASK	( ( (1<<BOARD_ID_SIZE)-1)<<BOARD_ID_SHIFT)
+#define MESSAGE_ID_MASK ( ( (1<<MESSAGE_ID_SIZE)-1)<<(BOARD_ID_SHIFT+BOARD_ID_SIZE))
 #define BOARD_EMERGENCY_ID		0
 #define BOARD_MISSION_ID		1
 #define BOARD_COMMUNICATION_ID	2
@@ -26,6 +27,8 @@
 
 #define CAN_BOARD MOTHERBOARD
 #define CAN_BOARD_ID BOARD_MOTHERBOARD_ID
+
+#define CAN_REG_DATA_SIZE 8
 
 enum can_board{
 	EMERGENCY = 0,
@@ -47,11 +50,24 @@ typedef struct{
 	can_regData_u data;
 	uint32_t lastTick;
 	const char* name;
-	void (*changeCallback)(uint32_t regId);
+	void (*changeCallback)(uint32_t);
 } can_reg_t;
+
+
 
 uint32_t can_canInit();
 
-uint32_t can_canSetRegister(uint32_t index,can_regData_u data);
+uint32_t can_canSetRegister(uint32_t index,can_regData_u* data);
+
+uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_reg_t* reg);
+
+uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t));
+
+//called on reception of a new packet
+void can_regUpdateCallback(void);
+
+uint32_t can_canSetRegisterTest(uint32_t board, uint32_t index,can_regData_u* data);
+
+
 
 #endif /* BSP_BSP_CAN_H_ */

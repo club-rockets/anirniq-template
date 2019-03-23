@@ -20,7 +20,9 @@
 #define BOARD_ACQUISITION_ID_SHIFTED	(3<<BOARD_ID_SHIFT)
 #define BOARD_MOTHERBOARD_ID_SHIFTED 	(4<<BOARD_ID_SHIFT)
 
-can_reg_t can_emergencyRegisters[] = {
+#define CAN_REG_SIZE 1
+
+volatile can_reg_t can_emergencyRegisters[] = {
 		//one random value for now
 		{
 				.name = "test",
@@ -30,7 +32,7 @@ can_reg_t can_emergencyRegisters[] = {
 		}
 };
 
-can_reg_t can_missionRegisters[] = {
+volatile can_reg_t can_missionRegisters[] = {
 		{
 				.name = "heartBeat",
 				.lastTick = 0,
@@ -39,7 +41,7 @@ can_reg_t can_missionRegisters[] = {
 		}
 };
 
-can_reg_t can_communicationRegisters[] = {
+volatile can_reg_t can_communicationRegisters[] = {
 		{
 				.name = "heartBeat",
 				.lastTick = 0,
@@ -48,7 +50,7 @@ can_reg_t can_communicationRegisters[] = {
 		}
 };
 
-can_reg_t can_acquisitionRegisters[] = {
+volatile can_reg_t can_acquisitionRegisters[] = {
 		{
 				.name = "heartBeat",
 				.lastTick = 0,
@@ -57,7 +59,7 @@ can_reg_t can_acquisitionRegisters[] = {
 		}
 };
 
-can_reg_t can_motherboardRegisters[] = {
+volatile can_reg_t can_motherboardRegisters[] = {
 		{
 				.name = "heartBeat",
 				.lastTick = 0,
@@ -66,7 +68,7 @@ can_reg_t can_motherboardRegisters[] = {
 		}
 };
 
-can_reg_t* can_registers[] = {
+volatile can_reg_t* can_registers[] = {
 		can_emergencyRegisters,
 		can_missionRegisters,
 		can_communicationRegisters,
