@@ -50,24 +50,28 @@ typedef struct{
 	can_regData_u data;
 	uint32_t lastTick;
 	const char* name;
-	void (*changeCallback)(uint32_t);
+	void (*changeCallback)(uint32_t,uint32_t);
 } can_reg_t;
 
 
 
 uint32_t can_canInit();
 
-uint32_t can_canSetRegister(uint32_t index,can_regData_u* data);
+uint32_t can_canSetRegisterData(uint32_t index,can_regData_u* data);
 
-uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_reg_t* reg);
+uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_regData_u* reg);
 
-uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t));
+uint32_t can_getRegisterTimestamp(enum can_board board, uint32_t index);
+
+uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t,uint32_t));
 
 //called on reception of a new packet
 void can_regUpdateCallback(void);
 
-uint32_t can_canSetRegisterTest(uint32_t board, uint32_t index,can_regData_u* data);
+//Send can frame but doesnt update local register (to be used in loopback mode)
+uint32_t can_canSetRegisterLoopback(uint32_t board, uint32_t index,can_regData_u* data);
 
-
+//set local register without sending it to canbus (use for testing)
+uint32_t can_canSetRegisterSelf(uint32_t board, uint32_t index,can_regData_u* data);
 
 #endif /* BSP_BSP_CAN_H_ */

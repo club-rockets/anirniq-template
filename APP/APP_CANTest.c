@@ -18,7 +18,7 @@ void tsk_CANTest(void const * argument){
 	can_canInit();
 
 	while(1){
-		can_canSetRegisterTest(1,0,&data);
+		can_canSetRegisterLoopback(1,0,&data);
 		osDelay(1000);
 		can_getRegisterData(1,0,&dat);
 	}

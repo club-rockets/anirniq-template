@@ -20,8 +20,6 @@
 #define BOARD_ACQUISITION_ID_SHIFTED	(3<<BOARD_ID_SHIFT)
 #define BOARD_MOTHERBOARD_ID_SHIFTED 	(4<<BOARD_ID_SHIFT)
 
-#define CAN_REG_SIZE 1
-
 volatile can_reg_t can_emergencyRegisters[] = {
 		//one random value for now
 		{
@@ -65,6 +63,12 @@ volatile can_reg_t can_motherboardRegisters[] = {
 				.lastTick = 0,
 				.changeCallback = 0,
 				.data = {0}
+		},
+		{
+			.name = "batteryVoltage",
+			.lastTick = 0,
+			.changeCallback = 0,
+			.data = {0}
 		}
 };
 
@@ -74,6 +78,14 @@ volatile can_reg_t* can_registers[] = {
 		can_communicationRegisters,
 		can_acquisitionRegisters,
 		can_motherboardRegisters,
+};
+
+const uint8_t can_registersSize[] = {
+		sizeof(can_emergencyRegisters)/sizeof(can_reg_t),
+		sizeof(can_missionRegisters)/sizeof(can_reg_t),
+		sizeof(can_communicationRegisters)/sizeof(can_reg_t),
+		sizeof(can_acquisitionRegisters)/sizeof(can_reg_t),
+		sizeof(can_motherboardRegisters)/sizeof(can_reg_t)
 };
 
 

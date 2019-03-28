@@ -69,32 +69,43 @@ uint32_t can_canInit(){
 }
 
 //block if no mailbox is available
-uint32_t can_canSetRegister(uint32_t index,can_regData_u* data){
-	if(index >= CAN_REG_SIZE){
+uint32_t can_canSetRegisterData(uint32_t index,can_regData_u* data){
+	if(CAN_BOARD >= 5 || index >= can_registersSize[CAN_BOARD]){
 		return 0;
 	}
+	can1Fifo0DeInitIt(&can1Instance);
 	can_registers[CAN_BOARD][index].data = *data;
-	can_registers[CAN_BOARD][index].lastTick = osKernelSysTick();
-
+	can_registers[CAN_BOARD][index].lastTick = HAL_GetTick();
+	can1Fifo0InitIt(&can1Instance);
 	//send register
 	while(!canSendPacket(&can1Instance,(CAN_BOARD_ID<<1)&(index<<(1+BOARD_ID_SIZE)),0,CAN_REG_DATA_SIZE,data));
+
+	//call callback
+	if(can_registers[CAN_BOARD][index].changeCallback){
+		can_registers[CAN_BOARD][index].changeCallback(CAN_BOARD,index);
+	}
 
 	return 1;
 }
 
 
-uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_reg_t* reg){
-
+uint32_t can_getRegisterData(enum can_board board, uint32_t index, can_regData_u* reg){
 
 	//since this is not an atomic operation,
 	//make sure that the data was not modified by an interrupt during reading
-	__disable_irq();
-	*reg = can_registers[board][index];
-	__enable_irq();
-return 1;
+	can1Fifo0DeInitIt(&can1Instance);
+	*reg = can_registers[board][index].data;
+	can1Fifo0InitIt(&can1Instance);
+
+	return 1;
 }
 
-uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t)){
+uint32_t can_getRegisterTimestamp(enum can_board board, uint32_t index){
+
+	return can_registers[board][index].lastTick;
+}
+
+uint32_t can_setRegisterCallback(uint32_t index, void (*callback)(uint32_t,uint32_t)){
 
 	can_registers[CAN_BOARD][index].changeCallback = callback;
 	return 1;
@@ -111,22 +122,43 @@ void can_regUpdateCallback(void){
 	id = ((packet.STID) & MESSAGE_ID_MASK) >> (BOARD_ID_SHIFT+BOARD_ID_SIZE);
 
 	//if board and id valid
-	if(board <= 4 && id < CAN_REG_SIZE){
+	if(board <= 4 && id < can_registersSize[board]){
 		//copy the data in the register
 		memcpy((void*)(&can_registers[board][id].data),(void*)(&packet.data),sizeof(can_regData_u));
 		//update the tick value
 		can_registers[board][id].lastTick = HAL_GetTick();
 		//call the register change callback if non-null
 		if(can_registers[board][id].changeCallback){
-			can_registers[board][id].changeCallback(id);
+			can_registers[board][id].changeCallback(board,id);
 		}
 	}
 }
 
-uint32_t can_canSetRegisterTest(uint32_t board, uint32_t index,can_regData_u* data){
-
+uint32_t can_canSetRegisterLoopback(uint32_t board, uint32_t index,can_regData_u* data){
+	if(board >= 5 || index >= can_registersSize[board]){
+		return 0;
+	}
 	//send register
 	canSendPacket(&can1Instance,(board<<1)|(index<<(1+BOARD_ID_SIZE)),0,CAN_REG_DATA_SIZE,data);
+
+	return 1;
+}
+
+//set local register without sending it to canbus (use for testing)
+uint32_t can_canSetRegisterSelf(uint32_t board, uint32_t index,can_regData_u* data){
+	if(board >= 5 || index >= can_registersSize[board]){
+		return 0;
+	}
+
+	//disable can interrupt to avoid data corruption
+	can1Fifo0DeInitIt(&can1Instance);
+	can_registers[board][index].data = *data;
+	can_registers[board][index].lastTick = HAL_GetTick();
+	can1Fifo0InitIt(&can1Instance);
+
+	if(can_registers[board][index].changeCallback){
+		can_registers[board][index].changeCallback(board,index);
+	}
 
 	return 1;
 }
